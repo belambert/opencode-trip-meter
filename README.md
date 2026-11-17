@@ -48,7 +48,8 @@ Speed counts output and reasoning tokens per assistant step, timed from the firs
 the end of the model stream, so tool execution and time to first token are excluded.
 
 Prices come from the model catalog for the model selected in the prompt, using the base tier
-(context-size tiers are ignored). Models with no pricing, such as local ones, show `no pricing`.
+(context-size tiers are ignored). Models with no pricing, such as local ones, show the session's
+token counts per category instead, marked `no pricing`.
 
 Spend prices each message's tokens at the base tier of the model that produced it, so switching
 models mid-session stays accurate. Reasoning tokens bill as output. The total is checked against

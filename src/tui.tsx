@@ -7,6 +7,7 @@ import {
   findModel,
   fmtPrice,
   fmtRate,
+  fmtTokens,
   fmtUSD,
   matches,
   price,
@@ -15,7 +16,9 @@ import {
   spend,
   total,
   unique,
+  usage,
   type Price,
+  type Tokens,
 } from "./stats"
 
 const DEFAULT_WINDOWS = [5, 60]
@@ -93,6 +96,7 @@ function Sidebar(props: {
   })
   const spent = createMemo(() => spend(msgs(), models()))
   const priced = () => total(cost()) > 0 || total(spent()) > 0
+  const used = createMemo(() => usage(msgs()))
 
   const Row = (p: { label: string; value: string; fg?: RGBA }) => (
     <box flexDirection="row" justifyContent="space-between">
@@ -104,6 +108,9 @@ function Sidebar(props: {
   const cols = (rate: string, usd: string) => `${rate.padStart(9)}  ${usd.padStart(7)}`
   const Cost = (p: { label: string; key: keyof Price }) => (
     <Row label={p.label} value={cols(fmtPrice(cost()[p.key]), fmtUSD(spent()[p.key]))} />
+  )
+  const Count = (p: { label: string; key: keyof Tokens }) => (
+    <Row label={p.label} value={fmtTokens(used()[p.key])} />
   )
 
   return (
@@ -122,10 +129,23 @@ function Sidebar(props: {
             <text fg={theme.text.base}>
               <b>Price</b>
             </text>
-            <Show when={priced()} fallback={<text fg={theme.text.faint}>{m().name}</text>}>
+            <Show
+              when={priced()}
+              fallback={
+                <>
+                  <Row label={m().name} value="tokens" fg={theme.text.faint} />
+                  <Count label="input" key="input" />
+                  <Count label="cached" key="cached" />
+                  <Show when={used().write > 0}>
+                    <Count label="write" key="write" />
+                  </Show>
+                  <Count label="output" key="output" />
+                  <Row label="total" value={fmtTokens(total(used()))} />
+                  <text fg={theme.text.muted}>no pricing</text>
+                </>
+              }
+            >
               <Row label={m().name} value={cols("rate", "spent")} fg={theme.text.faint} />
-            </Show>
-            <Show when={priced()} fallback={<text fg={theme.text.muted}>no pricing</text>}>
               <Cost label="input" key="input" />
               <Cost label="cached" key="cached" />
               <Show when={cost().write > 0 || spent().write > 0}>
