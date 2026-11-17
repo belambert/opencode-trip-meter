@@ -1,6 +1,6 @@
 {
   "name": "opencode-trip-meter",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "OpenCode v2 sidebar plugin showing tokens/sec and the current model's per-token prices.",
   "type": "module",
   "license": "MIT",
