@@ -83,6 +83,15 @@ Bump `version` in `package.json`, merge it, then publish a GitHub release tagged
 (e.g. `v0.2.0`). The `publish` workflow checks the tag matches, runs lint and tests, and publishes
 to npm via trusted publishing, so no npm token is needed.
 
+npm can take a few minutes to make a new version available. Once it shows the new version, update
+the installed plugin and restart OpenCode:
+
+    npm view opencode-trip-meter version
+    opencode plugin check
+    opencode plugin update opencode-trip-meter
+
+`opencode plugin update` with no package name updates every outdated plugin.
+
 ## Layout
 
 ```text
