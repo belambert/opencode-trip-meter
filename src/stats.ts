@@ -5,8 +5,13 @@ export type Sample = { id: string; end: number; tokens: number; ms: number }
 
 export type Speed = { label: string; tps?: number }
 
+type Category = "input" | "cached" | "write" | "output"
+
 /** Per-million-token prices in USD. */
-export type Price = { input: number; cached: number; write: number; output: number }
+export type Price = Record<Category, number>
+
+/** Token counts per category; reasoning counts as output. */
+export type Tokens = Record<Category, number>
 
 /** USD spent per category, plus the host-recorded total. */
 export type Spend = Price & { billed: number }
@@ -77,7 +82,21 @@ export function spend(
   return s
 }
 
-export const total = (p: Price) => p.input + p.cached + p.write + p.output
+/** Tokens used per category, with the same split as `spend`. */
+export function usage(msgs: readonly SessionMessageInfo[]): Tokens {
+  const u = { input: 0, cached: 0, write: 0, output: 0 }
+  for (const msg of msgs) {
+    if (msg.type !== "assistant" || !msg.tokens) continue
+    const t = msg.tokens
+    u.input += t.input
+    u.cached += t.cache.read
+    u.write += t.cache.write
+    u.output += t.output + t.reasoning
+  }
+  return u
+}
+
+export const total = (p: Price | Tokens) => p.input + p.cached + p.write + p.output
 
 // tolerate float drift and sub-cent rounding in recorded costs
 const MATCH_TOLERANCE = 0.02
@@ -131,5 +150,9 @@ export const fmtPrice = (n: number) => `${usd.format(n)}/M`
 const cents = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" })
 
 export const fmtUSD = (n: number) => (n > 0 && n < 0.01 ? "<$0.01" : cents.format(n))
+
+const compact = new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 })
+
+export const fmtTokens = (n: number) => compact.format(n)
 
 const span = (m: number) => (m % 60 === 0 ? `${m / 60}h` : `${m}m`)

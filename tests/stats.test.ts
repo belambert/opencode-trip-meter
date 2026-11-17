@@ -4,6 +4,7 @@ import {
   findModel,
   fmtPrice,
   fmtRate,
+  fmtTokens,
   fmtUSD,
   matches,
   price,
@@ -14,6 +15,7 @@ import {
   spend,
   total,
   unique,
+  usage,
 } from "../src/stats"
 
 // a step whose first timed part starts at `start` and whose stream ends at `end`, followed by tool time
@@ -139,7 +141,28 @@ describe("spend", () => {
   })
 })
 
+describe("usage", () => {
+  test("counts tokens per category, reasoning as output", () => {
+    const user = { id: "u", type: "user" } as unknown as SessionMessageInfo
+    const tokens = { input: 10, output: 80, reasoning: 20, cache: { read: 5, write: 3 } }
+    const a = { ...msg("a", 0, 1000, 0), tokens } as SessionMessageInfo
+    expect(usage([a, msg("b", 0, 1000, 50), user])).toEqual({
+      input: 20,
+      cached: 5,
+      write: 3,
+      output: 150,
+    })
+  })
+})
+
 describe("format", () => {
+  test("tokens", () => {
+    expect(fmtTokens(0)).toBe("0")
+    expect(fmtTokens(950)).toBe("950")
+    expect(fmtTokens(12_345)).toBe("12.3K")
+    expect(fmtTokens(2_500_000)).toBe("2.5M")
+  })
+
   test("rates", () => {
     expect(fmtRate(undefined)).toBe("—")
     expect(fmtRate(4.26)).toBe("4.3 tok/s")
